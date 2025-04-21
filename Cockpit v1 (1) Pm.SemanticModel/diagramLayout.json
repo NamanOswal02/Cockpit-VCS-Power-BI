@@ -1,0 +1,48 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 207.01031242449258
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 0,
+            "y": 452.06673471321494
+          },
+          "nodeIndex": "Fact_Pipeline_Cockpit",
+          "nodeLineageTag": "22e96fa3-16ac-4dd1-9a86-a0da657b56e0",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 341.86779661016931,
+            "y": 449.76164996745223
+          },
+          "nodeIndex": "Dim_FP_Sort_Order",
+          "nodeLineageTag": "4121bf13-e13e-4d09-879a-56db489e4278",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 2
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 97,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

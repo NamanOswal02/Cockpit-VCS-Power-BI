@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Cockpit v1 (1) Pm"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b2ea113f-e9b0-4e36-b4f8-8a6948cb41dc"
+  }
+}

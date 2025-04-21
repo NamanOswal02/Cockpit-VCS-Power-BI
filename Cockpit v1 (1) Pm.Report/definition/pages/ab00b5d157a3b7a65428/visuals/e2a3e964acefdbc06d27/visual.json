@@ -1,0 +1,16 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.6.0/schema.json",
+  "name": "e2a3e964acefdbc06d27",
+  "position": {
+    "x": 569.11764705882354,
+    "y": 192.64705882352939,
+    "z": 1500,
+    "height": 161.76470588235293,
+    "width": 26.470588235294144,
+    "tabOrder": 34000
+  },
+  "visualGroup": {
+    "displayName": "Shape- current quarter",
+    "groupMode": "ScaleMode"
+  }
+}

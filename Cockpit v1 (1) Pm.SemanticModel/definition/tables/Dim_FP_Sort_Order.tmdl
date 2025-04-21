@@ -1,0 +1,36 @@
+table Dim_FP_Sort_Order
+	lineageTag: 4121bf13-e13e-4d09-879a-56db489e4278
+
+	column 'Fiscal Period'
+		dataType: string
+		lineageTag: 810d33c1-ccc9-49cc-9994-4b48b15a5142
+		summarizeBy: none
+		sourceColumn: Fiscal Period
+		sortByColumn: 'FP Sort Order'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'FP Sort Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: a0197cd7-9ecc-408c-8881-8b0345e396a5
+		summarizeBy: none
+		sourceColumn: FP Sort Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_FP_Sort_Order = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("Tcu7CcAwDAXAXV5tQ6xPkjVcG+2/hiWEQOUVdw62THqIMbBgw73C4qY0lTnNZUlLWdtX99t++Gs//MPsAg==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Fiscal Period" = _t, #"FP Sort Order" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Fiscal Period", type text}, {"FP Sort Order", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

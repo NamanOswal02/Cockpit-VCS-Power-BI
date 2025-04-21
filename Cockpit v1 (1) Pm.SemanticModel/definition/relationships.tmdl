@@ -1,0 +1,24 @@
+relationship e3dac251-5573-4c79-8026-8a2abb21647f
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_Pipeline_Cockpit.'Last Activity'
+	toColumn: LocalDateTable_132af46c-408f-454a-9bb6-181b4120cb87.Date
+
+relationship 87e8ada4-ef1d-4a13-8387-73601b64b1e7
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_Pipeline_Cockpit.'Last Stage Change Date'
+	toColumn: LocalDateTable_dd2d87b1-c9c9-42c8-a4ac-46d2cff30a24.Date
+
+relationship b9542c72-16f4-40a6-94fb-160332f42c5a
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_Pipeline_Cockpit.'Close Date'
+	toColumn: LocalDateTable_62bdb2a3-edfa-47c7-a777-a448b6251be1.Date
+
+relationship 161aba9d-7a3e-4f4d-8ac7-46c26de38339
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_Pipeline_Cockpit.'Created Date'
+	toColumn: LocalDateTable_6967f155-824f-4a99-be38-11302683f565.Date
+
+relationship AutoDetected_305d6925-aec4-4549-90db-507029a4262e
+	fromColumn: Fact_Pipeline_Cockpit.'Fiscal Period'
+	toColumn: Dim_FP_Sort_Order.'Fiscal Period'
+

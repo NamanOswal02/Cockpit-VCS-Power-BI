@@ -1,0 +1,28 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-IN
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["Fact_Pipeline_Cockpit","Dim_FP_Sort_Order"]
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBIDesktopVersion = 2.141.1558.0 (25.03)+75b5f06a991f8f8a8a4d6b6fcd0f66e1ec2d6fdc
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table DateTableTemplate_eb45baea-c736-4655-a1ea-7c5fbf36b3e1
+ref table Fact_Pipeline_Cockpit
+ref table LocalDateTable_132af46c-408f-454a-9bb6-181b4120cb87
+ref table LocalDateTable_dd2d87b1-c9c9-42c8-a4ac-46d2cff30a24
+ref table LocalDateTable_62bdb2a3-edfa-47c7-a777-a448b6251be1
+ref table LocalDateTable_6967f155-824f-4a99-be38-11302683f565
+ref table Dim_FP_Sort_Order
+
+ref role RLS
+
+ref cultureInfo en-US
+

@@ -1,0 +1,614 @@
+table Fact_Pipeline_Cockpit
+	lineageTag: 22e96fa3-16ac-4dd1-9a86-a0da657b56e0
+
+	measure 'Without Amount' =
+			
+			VAR Result = CALCULATE(
+			    DISTINCTCOUNT(Fact_Pipeline_Cockpit[Opportunity ID]),
+			    Fact_Pipeline_Cockpit[Amount.amount] <= 0,
+			    Fact_Pipeline_Cockpit[Closed] = FALSE()
+			)
+			RETURN IF(ISBLANK(Result), 0, Result)
+		formatString: 0
+		displayFolder: Measures
+		lineageTag: e25329e9-e10c-41b6-9ea4-302158008833
+
+	measure 'Without MEDDIC info' =
+			
+			VAR Result = CALCULATE(
+			    DISTINCTCOUNT(Fact_Pipeline_Cockpit[Opportunity ID]),
+			    Fact_Pipeline_Cockpit[MEDDIC] = 0,
+			    Fact_Pipeline_Cockpit[Closed] = FALSE()
+			)
+			RETURN IF(ISBLANK(Result), 0, Result)
+		formatString: 0
+		displayFolder: Measures
+		lineageTag: 671ad8f5-4aa2-495e-8f44-3bbb4eac3220
+
+	measure 'Without Activity' =
+			
+			VAR Result =
+			    CALCULATE(
+			        DISTINCTCOUNT(Fact_Pipeline_Cockpit[Opportunity ID]),
+			        Fact_Pipeline_Cockpit[Days since Last Activity] >= 30,
+			        Fact_Pipeline_Cockpit[Closed] = FALSE()
+			    )
+			RETURN
+			    IF(ISBLANK(Result), 0, Result)
+		formatString: 0
+		displayFolder: Measures
+		lineageTag: 845d40d9-0af6-4732-abef-622a7269718a
+
+	measure Stagnant =
+			
+			VAR Result =
+			    CALCULATE(
+			        DISTINCTCOUNT(Fact_Pipeline_Cockpit[Opportunity ID]),
+			        Fact_Pipeline_Cockpit[Stage Duration] >= 90,
+			        Fact_Pipeline_Cockpit[Closed] = FALSE()
+			    )
+			RETURN
+			    IF(ISBLANK(Result), 0, Result)
+		formatString: 0
+		displayFolder: Measures
+		lineageTag: 25bedd98-9207-4bea-9738-384fae395de7
+
+	measure Expired = ```
+			
+			VAR Result =
+			    CALCULATE(
+			        DISTINCTCOUNT(Fact_Pipeline_Cockpit[Opportunity ID]),
+			        Fact_Pipeline_Cockpit[Close Date] < TODAY(),
+			        Fact_Pipeline_Cockpit[Closed] = FALSE()
+			        
+			    )
+			RETURN
+			    IF(ISBLANK(Result), 0, Result)
+			
+			```
+		formatString: 0
+		displayFolder: Measures
+		lineageTag: 1b30bdea-82bf-470d-8837-8abadeff0450
+
+	measure 'Win Rate' = ```
+			
+			VAR WonClosedCount =
+			    CALCULATE(
+			        DISTINCTCOUNT(Fact_Pipeline_Cockpit[Opportunity ID]),
+			        Fact_Pipeline_Cockpit[Won] = TRUE()
+			    )
+			VAR TotalCount =
+			    CALCULATE(
+			        DISTINCTCOUNT(Fact_Pipeline_Cockpit[Opportunity ID])
+			    )
+			VAR Result = 
+			    DIVIDE(WonClosedCount, TotalCount)
+			
+			RETURN 
+			    IF(ISBLANK(Result), 0, Result)
+			```
+		formatString: 0%;-0%;0%
+		displayFolder: Measures
+		lineageTag: bb9f2560-84f4-4c4c-ac02-38846f704f2d
+
+	measure 'Average Deal Size' = ```
+			
+			VAR TotalAmountWon =
+			    CALCULATE(
+			        SUM(Fact_Pipeline_Cockpit[Amount.amount]),
+			        Fact_Pipeline_Cockpit[Won] = TRUE()
+			    )
+			
+			VAR WonOpptyCount =
+			    CALCULATE(
+			        DISTINCTCOUNT(Fact_Pipeline_Cockpit[Opportunity ID]),
+			        Fact_Pipeline_Cockpit[Won] = TRUE()
+			    )
+			
+			VAR Result = DIVIDE(TotalAmountWon, WonOpptyCount)
+			
+			RETURN
+			    IF(ISBLANK(Result), 0, Result)
+			
+			```
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Measures
+		lineageTag: b12eb50b-259b-465a-94f9-76ff24afcc7c
+
+	measure 'Average Sales Cycle' =
+			
+			VAR TotalSalesCycle =
+			    CALCULATE(
+			        SUM(Fact_Pipeline_Cockpit[Age]),
+			        Fact_Pipeline_Cockpit[Won] = TRUE()
+			    )
+			
+			VAR WonOpptyCount =
+			    CALCULATE(
+			        DISTINCTCOUNT(Fact_Pipeline_Cockpit[Opportunity ID]),
+			        Fact_Pipeline_Cockpit[Won] = TRUE()
+			    )
+			
+			VAR Result = DIVIDE(TotalSalesCycle, WonOpptyCount)
+			
+			RETURN
+			    IF(ISBLANK(Result), 0, Result)
+		formatString: 0
+		displayFolder: Measures
+		lineageTag: f357f213-647c-4c9e-9a3d-f6da8af7bd40
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Risk Attribution' =
+			
+			VAR TopDeals =
+			    TOPN(
+			        10,
+			        FILTER(
+			            Fact_Pipeline_Cockpit,
+			            Fact_Pipeline_Cockpit[Closed] = FALSE()
+			        ),
+			        Fact_Pipeline_Cockpit[Amount.amount],
+			        DESC
+			    )
+			
+			VAR TopDealsAmount =
+			    SUMX(TopDeals, Fact_Pipeline_Cockpit[Amount.amount])
+			
+			VAR TotalPipelineAmount =
+			    CALCULATE(
+			        SUM(Fact_Pipeline_Cockpit[Amount.amount]),
+			        Fact_Pipeline_Cockpit[Closed] = FALSE()
+			    )
+			
+			VAR Result = DIVIDE(TopDealsAmount, TotalPipelineAmount)
+			
+			RETURN IF(ISBLANK(Result), 0, Result)
+		formatString: 0%;-0%;0%
+		displayFolder: Measures
+		lineageTag: 34aaa7c3-9af9-421c-8be2-0267db2bf963
+
+	measure 'Formatted Forecast' = ```
+			
+			VAR Amount = SUM('Fact_Pipeline_Cockpit'[Amount.amount])  
+			RETURN
+			    SWITCH(
+			        TRUE(),
+			        ABS(Amount) >= 1000000, "$" & FORMAT(Amount/1000000, "0") & "M",  
+			        ABS(Amount) >= 1000, "$" & FORMAT(Amount/1000, "0") & "K",        
+			        "$" & FORMAT(Amount, "0")
+			    )
+			
+			```
+		displayFolder: Measures
+		lineageTag: 3ea2074e-a210-4304-9c2c-c9d72e079081
+
+	measure 'Formatted Tooltip' = ```
+			
+			VAR TotalAmount = SUM(Fact_Pipeline_Cockpit[Amount.amount])
+			VAR AmountFormatted = 
+			    IF(
+			        TotalAmount >= 1000000,
+			        FORMAT(TotalAmount / 1000000, "#,0.0") & "M",
+			        FORMAT(TotalAmount / 1000, "#,0.0") & "K"
+			    )
+			VAR OppCount = COUNT(Fact_Pipeline_Cockpit[Opportunity ID])
+			RETURN
+			"Amount: $" & AmountFormatted & " | Opportunities: " & OppCount
+			
+			```
+		displayFolder: Measures
+		lineageTag: 5b5a207f-c32f-43ec-b33d-84c86b69f298
+
+	measure 'M-Average Deal Size (K/M)' = ```
+			
+			SWITCH(
+			    TRUE(),
+			    [Average Deal Size] >= 1000000, FORMAT([Average Deal Size] / 1000000, "0.0") & "M",
+			    [Average Deal Size] >= 1000 && [Average Deal Size] < 1000000, FORMAT([Average Deal Size] / 1000, "0") & "K",
+			    FORMAT([Average Deal Size], "0")
+			)
+			
+			```
+		displayFolder: Measures
+		lineageTag: 5c62dbc0-8a62-43d9-b053-aae29f0bbb6f
+
+	column 'Account Name'
+		dataType: string
+		lineageTag: 5b512793-c431-4b8f-b991-159e8a255b86
+		summarizeBy: none
+		sourceColumn: Account Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Opportunity Owner'
+		dataType: string
+		lineageTag: 2fa7da1a-6f55-41b8-b5f0-82de27f3b08a
+		summarizeBy: none
+		sourceColumn: Opportunity Owner
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Opportunity Name'
+		dataType: string
+		lineageTag: 20f3d892-89b8-4531-9c9d-af11b280dce2
+		summarizeBy: none
+		sourceColumn: Opportunity Name
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Stage
+		dataType: string
+		lineageTag: 3994c88c-f016-4f0b-8ff1-3da41b1ea91a
+		summarizeBy: none
+		sourceColumn: Stage
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Amount.amount'
+		dataType: int64
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: a97d59d0-2d56-4ead-b26a-7190d74fd773
+		summarizeBy: sum
+		sourceColumn: Amount.amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fiscal Period'
+		dataType: string
+		lineageTag: 2c725c59-7525-45c9-aea6-032ccffa091d
+		summarizeBy: none
+		sourceColumn: Fiscal Period
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Expected Revenue.amount'
+		dataType: int64
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 67494aa0-e611-4a5a-8970-db790c0b9a1b
+		summarizeBy: sum
+		sourceColumn: Expected Revenue.amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Probability (%)'
+		dataType: double
+		lineageTag: 74625e01-1136-41a3-845b-f74deca7518a
+		summarizeBy: sum
+		sourceColumn: Probability (%)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Last Activity'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 8848fdd8-a0e0-4b27-bfc9-80dfdc1a3d8e
+		summarizeBy: none
+		sourceColumn: Last Activity
+
+		variation Variation
+			isDefault
+			relationship: e3dac251-5573-4c79-8026-8a2abb21647f
+			defaultHierarchy: LocalDateTable_132af46c-408f-454a-9bb6-181b4120cb87.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Last Stage Change Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: c8d695fc-7f5e-4611-9388-3c253856ae79
+		summarizeBy: none
+		sourceColumn: Last Stage Change Date
+
+		variation Variation
+			isDefault
+			relationship: 87e8ada4-ef1d-4a13-8387-73601b64b1e7
+			defaultHierarchy: LocalDateTable_dd2d87b1-c9c9-42c8-a4ac-46d2cff30a24.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Age
+		dataType: double
+		formatString: #,0
+		lineageTag: 8383e6ef-ac6f-497e-a22f-5ca7e24f7e0c
+		summarizeBy: sum
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column 'Close Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 29c847f3-de44-4f5b-871e-56bafcc55249
+		summarizeBy: none
+		sourceColumn: Close Date
+
+		variation Variation
+			isDefault
+			relationship: b9542c72-16f4-40a6-94fb-160332f42c5a
+			defaultHierarchy: LocalDateTable_62bdb2a3-edfa-47c7-a777-a448b6251be1.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Created Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: bb120baf-e2b0-40a0-b8c2-b2b6deba796c
+		summarizeBy: none
+		sourceColumn: Created Date
+
+		variation Variation
+			isDefault
+			relationship: 161aba9d-7a3e-4f4d-8ac7-46c26de38339
+			defaultHierarchy: LocalDateTable_6967f155-824f-4a99-be38-11302683f565.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Forecast Category'
+		dataType: string
+		lineageTag: d7896bfd-fa64-43c4-9570-4455c7e2cf3c
+		summarizeBy: none
+		sourceColumn: Forecast Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stage Duration'
+		dataType: double
+		formatString: #,0
+		lineageTag: 62219d82-ba13-436d-b2f8-b67fab36c2c7
+		summarizeBy: sum
+		sourceColumn: Stage Duration
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column Closed
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 8729075b-f0ba-4ffd-a22a-bbe73fcdd2a5
+		summarizeBy: none
+		sourceColumn: Closed
+
+		annotation SummarizationSetBy = Automatic
+
+	column Won
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 612ed76d-287f-4e6e-8819-3f26a536fa02
+		summarizeBy: none
+		sourceColumn: Won
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Next Step'
+		dataType: string
+		lineageTag: 2386c6cf-a028-46ce-8e68-d9f4197d7bbf
+		summarizeBy: none
+		sourceColumn: Next Step
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: b89984e7-1a7c-429d-b6a1-ce3c0e3f179d
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Opportunity Source'
+		dataType: string
+		lineageTag: 4aa3fda1-6c63-4b16-afee-2789fd76f889
+		summarizeBy: none
+		sourceColumn: Opportunity Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Lead Source'
+		dataType: string
+		lineageTag: b5b844c3-25eb-42a6-bdff-15b143e492e6
+		summarizeBy: none
+		sourceColumn: Lead Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: d782163f-1b13-422f-86ce-c3fb33a1f6d1
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Industry
+		dataType: string
+		lineageTag: 015f7558-d828-4e33-9e9b-7f2df4245798
+		summarizeBy: none
+		sourceColumn: Industry
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Push Count'
+		dataType: double
+		lineageTag: b3032b72-9da7-4316-b83f-d2d89d0c6dec
+		summarizeBy: sum
+		sourceColumn: Push Count
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Opportunity ID'
+		dataType: string
+		lineageTag: 9288a521-a8dc-4759-a53f-24eae3cf7891
+		summarizeBy: none
+		sourceColumn: Opportunity ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column MEDDIC
+		dataType: int64
+		formatString: 0
+		lineageTag: d0a2d51a-91e9-4635-8dba-4c5f9b1a4877
+		summarizeBy: sum
+		sourceColumn: MEDDIC
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Custom Stage' =
+			
+			SWITCH(
+			    TRUE(),
+			    Fact_Pipeline_Cockpit[Stage] = "Closed Lost", "Closed Lost",
+			    Fact_Pipeline_Cockpit[Stage] = "Closed Won", "Closed Won",
+			    Fact_Pipeline_Cockpit[Stage] = "Needs Analysis", "Stage 2",
+			    Fact_Pipeline_Cockpit[Stage] = "Negotiation/Review", "Stage 5",
+			    Fact_Pipeline_Cockpit[Stage] = "Perception Analysis", "Stage 4",
+			    Fact_Pipeline_Cockpit[Stage] = "Proposal/Price Quote", "Stage 4",
+			    Fact_Pipeline_Cockpit[Stage] = "Prospecting", "Stage 1",
+			    Fact_Pipeline_Cockpit[Stage] = "Qualification", "Stage 1",
+			    Fact_Pipeline_Cockpit[Stage] = "Value Proposition", "Stage 3",
+			    "Unknown"
+			)
+		lineageTag: 539193da-e15f-4534-8c23-5c28106e2d19
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSCD
+		dataType: string
+		lineageTag: 6e2daa7a-2a1e-4915-843d-a33963337fc5
+		summarizeBy: none
+		sourceColumn: LSCD
+
+		annotation SummarizationSetBy = Automatic
+
+	column FC =
+			
+			SWITCH(
+			    Fact_Pipeline_Cockpit[Forecast Category],
+			    "Best Case", "Upside",
+			    "Closed", "Closed",
+			    "Commit", "Commit",
+			    "Omitted", "Lost",
+			    "Pipeline", "Pipeline",
+			    Fact_Pipeline_Cockpit[Forecast Category]
+			)
+		lineageTag: 4b97a83c-3ef1-4a82-94e5-9edb51725389
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days since Last Activity' = ```
+			
+			VAR LastActDate = 
+			    IF(
+			        ISBLANK(Fact_Pipeline_Cockpit[Last Activity]),
+			        Fact_Pipeline_Cockpit[Created Date],
+			        Fact_Pipeline_Cockpit[Last Activity]
+			    )
+			RETURN
+			    DATEDIFF(LastActDate, TODAY(), DAY)
+			```
+		formatString: #,0
+		lineageTag: 6106c434-4075-4a31-ac69-b5642c5cf1c8
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SFDC Hyperlink'
+		dataType: string
+		lineageTag: 2c596f6a-d46b-44d6-8cfb-be459de294d9
+		dataCategory: WebUrl
+		summarizeBy: none
+		sourceColumn: SFDC Hyperlink
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stage Duration Adjusted' =
+			
+			IF (
+			    Fact_Pipeline_Cockpit[Closed],
+			    Fact_Pipeline_Cockpit[Stage Duration],
+			    IF (
+			        NOT ISBLANK(Fact_Pipeline_Cockpit[Last Activity]),
+			        DATEDIFF(Fact_Pipeline_Cockpit[Last Activity], TODAY(), DAY),
+			        BLANK()
+			    )
+			)
+		lineageTag: ee05baf0-a63d-4e36-ac2b-a0bfb943a1ec
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Amount in Millions' = ```
+			
+			VAR Amt = Fact_Pipeline_Cockpit[Amount.amount]
+			RETURN 
+			IF(
+			    ISBLANK(Amt),
+			    BLANK(),
+			    FORMAT(Amt / 1000000, "0.0") & "M"
+			)
+			```
+		lineageTag: ee836b7d-08b2-4932-8efe-db2864cb9e2f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Email =
+			
+			VAR FirstName = LEFT('Fact_Pipeline_Cockpit'[Opportunity Owner], FIND(" ", 'Fact_Pipeline_Cockpit'[Opportunity Owner]) - 1)
+			VAR LastName = RIGHT('Fact_Pipeline_Cockpit'[Opportunity Owner], LEN('Fact_Pipeline_Cockpit'[Opportunity Owner]) - FIND(" ", 'Fact_Pipeline_Cockpit'[Opportunity Owner]))
+			RETURN LOWER(FirstName & LEFT(LastName, 1) & "@gmail.com")
+		lineageTag: cdd7759f-fdf4-44ca-9eb8-7aa386c80916
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Pipeline_Cockpit = m
+		mode: import
+		source = ```
+				let
+				    Source = Salesforce.Reports("https://login.salesforce.com/", [ApiVersion=48]),
+				    #"00OdM00000A89oMUAR" = Source{[Name="00OdM00000A89oMUAR"]}[Data],
+				    #"Expanded Expected Revenue" = Table.ExpandRecordColumn(#"00OdM00000A89oMUAR", "Expected Revenue", {"amount"}, {"Expected Revenue.amount"}),
+				    #"Expanded Amount" = Table.ExpandRecordColumn(#"Expanded Expected Revenue", "Amount", {"amount"}, {"Amount.amount"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Amount",{{"Amount.amount", Int64.Type}, {"Expected Revenue.amount", Int64.Type}}),
+				    #"Added Custom" = Table.AddColumn(#"Changed Type", "MEDDIC", each Number.RoundDown(Number.RandomBetween(0, 7))),
+				    #"Added Custom1" = Table.AddColumn(#"Added Custom", "Custom", each if [Last Stage Change Date] = null then 
+				      Date.AddDays(Date.From(DateTime.LocalNow()), -[Stage Duration])
+				  else 
+				      [Last Stage Change Date]),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Custom1",{{"Custom", "LSCD"}}),
+				    #"Inserted Merged Column" = Table.AddColumn(#"Renamed Columns", "Merged", each Text.Combine({"https://digiprodigy-dev-ed.develop.lightning.force.com/lightning/r/Opportunity/", [Opportunity ID 18 char], "/view"}), type text),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Inserted Merged Column",{{"Merged", "SFDC Hyperlink"}}),
+				    #"Extracted Text After Delimiter" = Table.TransformColumns(#"Renamed Columns1", {{"Opportunity Name", each Text.AfterDelimiter(_, "Opportunity for "), type text}}),
+				    #"Renamed Columns2" = Table.RenameColumns(#"Extracted Text After Delimiter",{{"Opportunity ID 18 char", "Opportunity ID"}})
+				in
+				    #"Renamed Columns2"
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

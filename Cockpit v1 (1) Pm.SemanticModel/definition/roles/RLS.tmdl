@@ -1,0 +1,7 @@
+role RLS
+	modelPermission: read
+
+	tablePermission Fact_Pipeline_Cockpit = Fact_Pipeline_Cockpit[Email]= USERPRINCIPALNAME()
+
+	annotation PBI_Id = ff99309480b245e988f7e557cc95cb7c
+
