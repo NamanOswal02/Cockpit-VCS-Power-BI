@@ -213,6 +213,9 @@ table Fact_Pipeline_Cockpit
 		displayFolder: Measures
 		lineageTag: 5c62dbc0-8a62-43d9-b053-aae29f0bbb6f
 
+	measure Test = "This is just for test delete later"
+		lineageTag: 1390ca1e-3876-48d2-9b93-73c50d09e31e
+
 	column 'Account Name'
 		dataType: string
 		lineageTag: 5b512793-c431-4b8f-b991-159e8a255b86
