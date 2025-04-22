@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.6.0/schema.json",
+  "name": "656966f1c8da171c85fb",
+  "position": {
+    "x": 641.214421252372,
+    "y": 35.623023402909553,
+    "z": 2,
+    "height": 283.36495888678053,
+    "width": 304.41492726122709,
+    "tabOrder": 2
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Aggregation": {
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Fact_Pipeline_Cockpit"
+                        }
+                      },
+                      "Property": "Custom Stage"
+                    }
+                  },
+                  "Function": 3
+                }
+              },
+              "queryRef": "Min(Fact_Pipeline_Cockpit.Custom Stage)",
+              "nativeQueryRef": "First Custom Stage"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
